@@ -9,7 +9,6 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.callloging.*
 import rs.yettel.bms.db.DatabaseFactory
-import rs.yettel.bms.routes.offerRoutes
 import rs.yettel.bms.routes.userRoutes
 
 fun main() {
@@ -24,7 +23,6 @@ fun main() {
                 call.respondText("Ktor backend is running!")
             }
             userRoutes()
-            offerRoutes()
         }
     }.start(wait = true)
 }

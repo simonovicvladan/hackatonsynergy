@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: yettel_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: yettel_bms
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - yettel_network
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: yettel_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@yettel.rs
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - yettel_network
+
+  ktor-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yettel_backend
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/yettel_bms
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_DRIVER: org.postgresql.Driver
+    ports:
+      - "8080:8080"
+    networks:
+      - yettel_network
+
+volumes:
+  postgres_data:
+
+networks:
+  yettel_network:
+    driver: bridge
