@@ -16,7 +16,7 @@ fun Route.notificationRoutes() {
     post("/register-token") {
         val request = call.receive<RegisterTokenRequest>()
 
-        val updatedRows = UserRepository.registerFcmToken(request)
+        val updatedRows = UserRepository.updateUserFcmToken(request.email, request.token)
         if (updatedRows) {
             call.respondText("FCM token registered successfully for user ${request.email}")
         } else {

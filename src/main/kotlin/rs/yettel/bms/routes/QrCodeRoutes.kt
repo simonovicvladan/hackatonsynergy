@@ -1,65 +1,57 @@
 package rs.yettel.bms.routes
 
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.Conflict
+import io.ktor.http.HttpStatusCode.Companion.InternalServerError
+import io.ktor.http.HttpStatusCode.Companion.NotFound
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import rs.yettel.bms.firebase.FirebaseService
-import rs.yettel.bms.repositories.UserRepository
+import org.slf4j.LoggerFactory
+import rs.yettel.bms.services.QrCodeScanService
 
-fun Route.qrCodeRoutes() {
+private val logger = LoggerFactory.getLogger("QrCodeRoutes")
+
+fun Route.qrCodeRoutes(scanService: QrCodeScanService) {
     route("/qrcode-scan") {
         post {
             val request = call.receive<QrCodeScanRequest>()
+            if (request.scannerEmail.isBlank() || request.scaneeEmail.isBlank()) {
+                call.respond(BadRequest, ErrorResponse("Scanee and Scanner emails are requited"))
+                return@post
+            }
+            if (request.scannerEmail == request.scaneeEmail) {
+                call.respond(BadRequest, ErrorResponse("Cannot scan your own QR code"))
+                return@post
+            }
 
-            try {
-                val (scannerToken, scaneeToken) = UserRepository.addPointsToUsersAndGetFcmTokens(
-                    scannerEmail = request.scannerEmail,
-                    scaneeEmail = request.scaneeEmail,
-                    qrCode = request.qrCode
-                )
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    scaneeToken?.let { token ->
-                        FirebaseService.sendNotificationToToken(
-                            token = token,
-                            title = "You earned points!",
-                            body = "You received 1000 points for being scanned by ${request.scannerEmail}",
-                            data = mapOf(
-                                "type" to "scanee",
-                                "scanner" to request.scannerEmail,
-                                "scanee" to request.scaneeEmail,
-                                "points" to "1000"
-                            )
+            when (val result = scanService.processScan(request)) {
+                is ScanResult.Success -> {
+                    call.respond(
+                        OK,
+                        QrCodeScanResponse(
+                            message = "QR code scan processed successfully",
+                            scannerPoints = result.scannerPoints,
+                            scaneePoints = result.scaneePoints
                         )
-                    }
-
-                    scannerToken?.let { token ->
-                        FirebaseService.sendNotificationToToken(
-                            token = token,
-                            title = "You earned points!",
-                            body = "You received 2000 points for scanning ${request.scaneeEmail}",
-                            data = mapOf(
-                                "type" to "scanner",
-                                "scanner" to request.scannerEmail,
-                                "scanee" to request.scaneeEmail,
-                                "points" to "2000"
-                            )
-                        )
-                    }
+                    )
                 }
 
-                call.respondText("QR code scan processed. Notifications are being sent asynchronously.")
-            } catch (e: Exception) {
-                e.printStackTrace()
-                call.respond(
-                    status = io.ktor.http.HttpStatusCode.InternalServerError,
-                    message = mapOf("error" to (e.message ?: "Unknown error"))
-                )
+                is ScanResult.UserNotFound -> {
+                    call.respond(NotFound, ErrorResponse(result.message))
+                }
+
+                is ScanResult.AlreadyScanned -> {
+                    call.respond(Conflict, ErrorResponse(result.message))
+                }
+
+                is ScanResult.Error -> {
+                    logger.error("QR scan error: ${result.message}", result.exception)
+                    call.respond(InternalServerError, ErrorResponse(result.message))
+                }
             }
         }
     }
@@ -71,3 +63,20 @@ data class QrCodeScanRequest(
     val scaneeEmail: String,
     val qrCode: String? = null
 )
+
+@Serializable
+data class QrCodeScanResponse(
+    val message: String,
+    val scannerPoints: Int,
+    val scaneePoints: Int
+)
+
+@Serializable
+data class ErrorResponse(val error: String)
+
+sealed class ScanResult {
+    data class Success(val scannerPoints: Int, val scaneePoints: Int) : ScanResult()
+    data class UserNotFound(val message: String) : ScanResult()
+    data class AlreadyScanned(val message: String) : ScanResult()
+    data class Error(val message: String, val exception: Exception? = null) : ScanResult()
+}

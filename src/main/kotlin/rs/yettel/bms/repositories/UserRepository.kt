@@ -4,7 +4,6 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import rs.yettel.bms.db.Users
 import rs.yettel.bms.models.User
-import rs.yettel.bms.routes.RegisterTokenRequest
 
 object UserRepository {
 
@@ -20,9 +19,9 @@ object UserRepository {
             .singleOrNull()
     }
 
-    fun registerFcmToken(request: RegisterTokenRequest): Boolean = transaction {
-        Users.update({ Users.email eq request.email }) { stmt ->
-            request.token.let { v -> stmt[fcmToken] = v }
+    fun updateUserFcmToken(email: String, token: String): Boolean = transaction {
+        Users.update({ Users.email eq email }) { stmt ->
+            token.let { v -> stmt[fcmToken] = v }
         } > 0
     }
 
@@ -32,35 +31,64 @@ object UserRepository {
         scannerPoints: Int = 2000,
         scaneePoints: Int = 1000,
         qrCode: String? = null
-    ): Pair<String?, String?> = transaction {
+    ): ScanUpdateResult = transaction {
 
-        val scaneeRow = Users.selectAll().where { Users.email eq scaneeEmail }.singleOrNull()
+        val scaneeRow = Users.selectAll()
+            .where { Users.email eq scaneeEmail }
+            .singleOrNull()
+
         val scaneeToken = scaneeRow?.get(Users.fcmToken)
-        if (scaneeRow != null) {
-            val existingQrCodes = scaneeRow[Users.scannedQrCodes] ?: emptyList()
-            val newQrCodes = if (qrCode != null) existingQrCodes + qrCode else existingQrCodes
-            val currentPoints = scaneeRow[Users.currentPointsAmount] ?: 0
+        val scaneeExists = scaneeRow != null
 
-            Users.update({ Users.email eq scaneeEmail }) {
-                it[currentPointsAmount] = currentPoints + scaneePoints
-                it[scannedQrCodes] = newQrCodes
-            }
+        scaneeRow?.let { row ->
+            updateUserPoints(scaneeEmail, row, scaneePoints, qrCode)
         }
 
-        val scannerRow = Users.selectAll().where { Users.email eq scannerEmail }.singleOrNull()
+        val scannerRow = Users.selectAll()
+            .where { Users.email eq scannerEmail }
+            .singleOrNull()
+
         val scannerToken = scannerRow?.get(Users.fcmToken)
-        if (scannerRow != null) {
-            val existingQrCodes = scannerRow[Users.scannedQrCodes] ?: emptyList()
-            val newQrCodes = if (qrCode != null) existingQrCodes + qrCode else existingQrCodes
-            val currentPoints = scannerRow[Users.currentPointsAmount] ?: 0
+        val scannerExists = scannerRow != null
 
-            Users.update({ Users.email eq scannerEmail }) {
-                it[currentPointsAmount] = currentPoints + scannerPoints
-                it[scannedQrCodes] = newQrCodes
-            }
+        scannerRow?.let { row ->
+            updateUserPoints(scannerEmail, row, scannerPoints, qrCode)
         }
 
-        Pair(scannerToken, scaneeToken)
+        ScanUpdateResult(
+            scannerToken = scannerToken,
+            scaneeToken = scaneeToken,
+            scannerExists = scannerExists,
+            scaneeExists = scaneeExists
+        )
+    }
+
+    private fun updateUserPoints(
+        email: String,
+        row: ResultRow,
+        points: Int,
+        qrCode: String?
+    ) {
+        val currentPoints = row[Users.currentPointsAmount] ?: 0
+        val existingQrCodes = row[Users.scannedQrCodes] ?: emptyList()
+        val newQrCodes = if (qrCode != null && !existingQrCodes.contains(qrCode)) {
+            existingQrCodes + qrCode
+        } else {
+            existingQrCodes
+        }
+
+        Users.update({ Users.email eq email }) {
+            it[currentPointsAmount] = currentPoints + points
+            it[scannedQrCodes] = newQrCodes
+        }
+    }
+
+    fun hasScannedQrCode(email: String, qrCode: String): Boolean = transaction {
+        Users.selectAll()
+            .where { Users.email eq email }
+            .singleOrNull()
+            ?.get(Users.scannedQrCodes)
+            ?.contains(qrCode) ?: false
     }
 
     private fun toUser(row: ResultRow): User = User(
@@ -77,3 +105,10 @@ object UserRepository {
         fcmToken = row[Users.fcmToken]
     )
 }
+
+data class ScanUpdateResult(
+    val scannerToken: String?,
+    val scaneeToken: String?,
+    val scannerExists: Boolean,
+    val scaneeExists: Boolean
+)
