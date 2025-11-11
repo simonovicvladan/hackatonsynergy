@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import rs.yettel.bms.dto.ErrorResponse
 import rs.yettel.bms.repositories.RewardRepository
+import rs.yettel.bms.repositories.UserOfferRepository
 import rs.yettel.bms.repositories.UserRepository
 
 fun Route.userRoutes() {
@@ -76,6 +77,12 @@ fun Route.userRoutes() {
                     remainingPoints = remainingPoints
                 )
             )
+        }
+
+        get("{email}/offers") {
+            val email = call.parameters["email"] ?: ""
+            val offer = UserOfferRepository.findUnclaimedOffers(email)
+            call.respond(offer)
         }
     }
 }

@@ -23,7 +23,7 @@ object RewardRepository {
 
     fun findAvailableForUser(id: Long): List<Reward> = transaction {
         Rewards.selectAll()
-            .map { toReward(it) }
+            .map(::toReward)
             .filter { id !in it.usedByUsers }
     }
 
