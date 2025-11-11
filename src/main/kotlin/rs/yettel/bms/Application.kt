@@ -9,6 +9,8 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.callloging.*
 import rs.yettel.bms.db.DatabaseFactory
+import rs.yettel.bms.firebase.FirebaseAdmin
+import rs.yettel.bms.routes.notificationRoutes
 import rs.yettel.bms.routes.userRoutes
 
 fun main() {
@@ -17,12 +19,14 @@ fun main() {
         install(CallLogging)
 
         DatabaseFactory.init()
+        FirebaseAdmin.init()
 
         routing {
             get("/") {
-                call.respondText("Ktor backend is running!")
+                call.respondText("Ktor backend is running with FCM!")
             }
             userRoutes()
+            notificationRoutes()
         }
     }.start(wait = true)
 }

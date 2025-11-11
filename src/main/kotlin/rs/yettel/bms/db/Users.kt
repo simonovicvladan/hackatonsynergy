@@ -12,8 +12,9 @@ object Users : Table("users") {
     val tariffPackage = text("tariff_package").nullable()
     val category = short("category").nullable()
     val currentPointsAmount = integer("current_points_amount").nullable()
-
     val scannedPoints = text("scanned_points").nullable()
+    val fcmToken = text("fcm_token").nullable()
+
 
     override val primaryKey = PrimaryKey(msisdn)
 }
