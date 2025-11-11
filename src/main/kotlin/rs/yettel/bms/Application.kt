@@ -11,7 +11,9 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.request.*
 import kotlinx.serialization.json.Json
+import org.slf4j.event.Level
 import rs.yettel.bms.routes.qrCodeRoutes
 import rs.yettel.bms.db.DatabaseFactory
 import rs.yettel.bms.firebase.FirebaseAdmin
@@ -43,7 +45,10 @@ fun main() {
                 ignoreUnknownKeys = true
             })
         }
-        install(CallLogging)
+        install(CallLogging) {
+            level = Level.INFO
+            filter { call -> call.request.path().startsWith("/") }
+        }
 
         install(StatusPages) {
             exception<Throwable> { call, cause ->

@@ -22,16 +22,15 @@ class QrCodeScanService(
 
     fun processScan(request: QrCodeScanRequest): ScanResult {
         return try {
-            if (request.qrCode != null && userRepository.hasScannedQrCode(request.scannerEmail, request.qrCode)) {
+            if (userRepository.hasScannedQrCode(request.scannerEmail, request.scaneeEmail)) {
                 return ScanResult.AlreadyScanned("You have already scanned this QR code")
             }
 
-            val result = userRepository.addPointsToUsersAndGetFcmTokens(
+            val result = userRepository.addPointsToUsersAndGetFcmTokensForNotifications(
                 scannerEmail = request.scannerEmail,
                 scaneeEmail = request.scaneeEmail,
                 scannerPoints = scannerPoints,
-                scaneePoints = scaneePoints,
-                qrCode = request.qrCode
+                scaneePoints = scaneePoints
             )
 
             when {

@@ -7,15 +7,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import rs.yettel.bms.firebase.FirebaseService
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.transactions.transaction
-import rs.yettel.bms.db.Users
 import rs.yettel.bms.repositories.UserRepository
 
 fun Route.notificationRoutes() {
 
-    post("/register-token") {
-        val request = call.receive<RegisterTokenRequest>()
-
+    post("/register-fcm-token") {
+        val request = call.receive<RegisterFcmTokenRequest>()
         val updatedRows = UserRepository.updateUserFcmToken(request.email, request.token)
         if (updatedRows) {
             call.respondText("FCM token registered successfully for user ${request.email}")
@@ -38,43 +35,12 @@ fun Route.notificationRoutes() {
             body = body,
             data = data
         )
-
         call.respondText("Notification sent successfully! Response ID: $responseId")
-    }
-
-    post("/send-to-user") {
-        val request = call.receive<SendToUserRequest>()
-
-        val token = transaction {
-            Users
-                .select(Users.fcmToken)
-                .where { Users.msisdn eq request.msisdn }
-                .map { it[Users.fcmToken] }
-                .firstOrNull()
-        }
-
-        if (token == null) {
-            call.respondText(
-                "User ${request.msisdn} does not register FCM token.",
-                status = NotFound
-            )
-            return@post
-        }
-
-        val responseId = FirebaseService.sendNotificationToToken(
-            token = token,
-            title = request.title,
-            body = request.body
-        )
-
-        call.respondText("Notification sent to user ${request.msisdn}. Response ID: $responseId")
     }
 }
 
 @Serializable
-data class NotificationRequest(
-    val message: Message
-)
+data class NotificationRequest(val message: Message)
 
 @Serializable
 data class Message(
@@ -90,14 +56,4 @@ data class NotificationContent(
 )
 
 @Serializable
-data class RegisterTokenRequest(
-    val email: String,
-    val token: String
-)
-
-@Serializable
-data class SendToUserRequest(
-    val msisdn: Long,
-    val title: String,
-    val body: String
-)
+data class RegisterFcmTokenRequest(val email: String, val token: String)

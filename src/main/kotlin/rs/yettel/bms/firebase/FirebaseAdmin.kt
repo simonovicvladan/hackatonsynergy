@@ -3,7 +3,10 @@ package rs.yettel.bms.firebase
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import org.slf4j.LoggerFactory
 import java.io.FileInputStream
+
+private val logger = LoggerFactory.getLogger("FirebaseAdmin")
 
 object FirebaseAdmin {
     private var initialized = false
@@ -20,7 +23,6 @@ object FirebaseAdmin {
 
         FirebaseApp.initializeApp(options)
         initialized = true
-
-        println("Firebase initialized successfully")
+        logger.info("Firebase initialized successfully")
     }
 }

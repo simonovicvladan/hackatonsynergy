@@ -3,6 +3,9 @@ package rs.yettel.bms.db
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
+
+private val logger = LoggerFactory.getLogger("DatabaseFactory")
 
 object DatabaseFactory {
     fun init() {
@@ -15,7 +18,7 @@ object DatabaseFactory {
 
         transaction {
             SchemaUtils.create(Users, Rewards)
-            println("PostgreSQL database initialized successfully")
+            logger.info("PostgreSQL database initialized successfully")
         }
     }
 }

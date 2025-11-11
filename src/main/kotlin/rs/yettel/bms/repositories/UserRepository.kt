@@ -32,31 +32,28 @@ object UserRepository {
         } > 0
     }
 
-    fun addPointsToUsersAndGetFcmTokens(
+    fun addPointsToUsersAndGetFcmTokensForNotifications(
         scannerEmail: String,
         scaneeEmail: String,
         scannerPoints: Int = 2000,
         scaneePoints: Int = 1000,
-        qrCode: String? = null
     ): ScanUpdateResult = transaction {
 
         val scaneeRow = Users.selectAll()
             .where { Users.email eq scaneeEmail }
             .singleOrNull()
-
         val scaneeToken = scaneeRow?.get(Users.fcmToken)
         val scaneeExists = scaneeRow != null
 
-        scaneeRow?.let { row -> updateUserPoints(scaneeEmail, row, scaneePoints, qrCode) }
+        scaneeRow?.let { row -> updateUserPointsAndScannedQrCodes(scaneeEmail, row, scaneePoints) }
 
         val scannerRow = Users.selectAll()
             .where { Users.email eq scannerEmail }
             .singleOrNull()
-
         val scannerToken = scannerRow?.get(Users.fcmToken)
         val scannerExists = scannerRow != null
 
-        scannerRow?.let { row -> updateUserPoints(scannerEmail, row, scannerPoints, qrCode) }
+        scannerRow?.let { row -> updateUserPointsAndScannedQrCodes(scannerEmail, row, scannerPoints) }
 
         ScanUpdateResult(
             scannerToken = scannerToken,
@@ -66,32 +63,26 @@ object UserRepository {
         )
     }
 
-    private fun updateUserPoints(
-        email: String,
-        row: ResultRow,
-        points: Int,
-        qrCode: String?
-    ) {
+    private fun updateUserPointsAndScannedQrCodes(email: String, row: ResultRow, points: Int) {
         val currentPoints = row[Users.currentPointsAmount] ?: 0
         val existingQrCodes = row[Users.scannedQrCodes] ?: emptyList()
-        val newQrCodes = if (qrCode != null && !existingQrCodes.contains(qrCode)) {
-            existingQrCodes + qrCode
+        val newQrCodes = if (!existingQrCodes.contains(email)) {
+            existingQrCodes + email
         } else {
             existingQrCodes
         }
-
         Users.update({ Users.email eq email }) {
             it[currentPointsAmount] = currentPoints + points
             it[scannedQrCodes] = newQrCodes
         }
     }
 
-    fun hasScannedQrCode(email: String, qrCode: String): Boolean = transaction {
+    fun hasScannedQrCode(scannerEmail: String, scaneeEmail: String): Boolean = transaction {
         Users.selectAll()
-            .where { Users.email eq email }
+            .where { Users.email eq scaneeEmail }
             .singleOrNull()
             ?.get(Users.scannedQrCodes)
-            ?.contains(qrCode) ?: false
+            ?.contains(scannerEmail) ?: false
     }
 
     private fun toUser(row: ResultRow): User = User(

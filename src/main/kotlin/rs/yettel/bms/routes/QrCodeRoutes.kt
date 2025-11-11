@@ -11,6 +11,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
+import rs.yettel.bms.dto.ErrorResponse
 import rs.yettel.bms.services.QrCodeScanService
 
 private val logger = LoggerFactory.getLogger("QrCodeRoutes")
@@ -58,8 +59,7 @@ fun Route.qrCodeRoutes(scanService: QrCodeScanService) {
 @Serializable
 data class QrCodeScanRequest(
     val scannerEmail: String,
-    val scaneeEmail: String,
-    val qrCode: String? = null
+    val scaneeEmail: String
 )
 
 @Serializable
@@ -68,9 +68,6 @@ data class QrCodeScanResponse(
     val scannerPoints: Int,
     val scaneePoints: Int
 )
-
-@Serializable
-data class ErrorResponse(val error: String)
 
 sealed class ScanResult {
     data class Success(val scannerPoints: Int, val scaneePoints: Int) : ScanResult()
