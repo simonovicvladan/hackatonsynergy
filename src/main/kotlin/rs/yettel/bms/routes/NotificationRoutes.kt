@@ -8,10 +8,21 @@ import io.ktor.server.routing.*
 import rs.yettel.bms.firebase.FirebaseService
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import rs.yettel.bms.db.Users
+import rs.yettel.bms.repositories.UserRepository
 
 fun Route.notificationRoutes() {
+
+    post("/register-token") {
+        val request = call.receive<RegisterTokenRequest>()
+
+        val updatedRows = UserRepository.registerFcmToken(request)
+        if (updatedRows) {
+            call.respondText("FCM token registered successfully for user ${request.email}")
+        } else {
+            call.respondText("User ${request.email} not found", status = NotFound)
+        }
+    }
 
     post("/send-notification") {
         val request = call.receive<NotificationRequest>()
@@ -29,25 +40,6 @@ fun Route.notificationRoutes() {
         )
 
         call.respondText("Notification sent successfully! Response ID: $responseId")
-    }
-
-    post("/register-token") {
-        val request = call.receive<RegisterTokenRequest>()
-
-        val updatedRows = transaction {
-            Users.update({ Users.msisdn eq request.msisdn }) {
-                it[fcmToken] = request.token
-            }
-        }
-
-        if (updatedRows > 0) {
-            call.respondText("Token registered successfully for user ${request.msisdn}")
-        } else {
-            call.respondText(
-                "User with msisdn ${request.msisdn} not found",
-                status = NotFound
-            )
-        }
     }
 
     post("/send-to-user") {
@@ -99,7 +91,7 @@ data class NotificationContent(
 
 @Serializable
 data class RegisterTokenRequest(
-    val msisdn: Long, // todo email
+    val email: String,
     val token: String
 )
 

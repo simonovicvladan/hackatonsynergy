@@ -8,9 +8,6 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import rs.yettel.bms.repositories.UserRepository
 
-@Serializable
-data class LoginRequest(val msisdn: Long)
-
 fun Route.userRoutes() {
 
     route("/users") {
@@ -22,7 +19,7 @@ fun Route.userRoutes() {
 
         post("/login") {
             val request = call.receive<LoginRequest>()
-            val user = UserRepository.findByMsisdn(request.msisdn)
+            val user = UserRepository.findByEmail(request.email)
 
             if (user != null) {
                 call.respond(user)
@@ -32,3 +29,7 @@ fun Route.userRoutes() {
         }
     }
 }
+
+
+@Serializable
+data class LoginRequest(val email: String, val password: String)

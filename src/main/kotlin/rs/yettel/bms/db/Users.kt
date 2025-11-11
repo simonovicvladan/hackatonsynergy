@@ -15,7 +15,6 @@ object Users : Table("users") {
     val category = short("category").nullable()
     val currentPointsAmount = integer("current_points_amount").nullable()
     val scannedQrCodes: Column<List<String>?> = array<String>("scanned_qr_codes", TextColumnType()).nullable()
-
     val fcmToken = text("fcm_token").nullable()
 
     override val primaryKey = PrimaryKey(msisdn)

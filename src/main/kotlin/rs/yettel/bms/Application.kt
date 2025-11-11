@@ -14,6 +14,7 @@ import rs.yettel.bms.db.DatabaseFactory
 import rs.yettel.bms.firebase.FirebaseAdmin
 import rs.yettel.bms.routes.awardRoutes
 import rs.yettel.bms.routes.notificationRoutes
+import rs.yettel.bms.routes.qrCodeRoutes
 import rs.yettel.bms.routes.userRoutes
 
 fun main() {
@@ -40,6 +41,7 @@ fun main() {
             }
             userRoutes()
             awardRoutes()
+            qrCodeRoutes()
             notificationRoutes()
         }
     }.start(wait = true)
