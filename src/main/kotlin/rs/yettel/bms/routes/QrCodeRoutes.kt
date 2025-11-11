@@ -20,7 +20,7 @@ fun Route.qrCodeRoutes(scanService: QrCodeScanService) {
         post {
             val request = call.receive<QrCodeScanRequest>()
             if (request.scannerEmail.isBlank() || request.scaneeEmail.isBlank()) {
-                call.respond(BadRequest, ErrorResponse("Scanee and Scanner emails are requited"))
+                call.respond(BadRequest, ErrorResponse("Scanee and Scanner emails are required"))
                 return@post
             }
             if (request.scannerEmail == request.scaneeEmail) {
@@ -29,8 +29,7 @@ fun Route.qrCodeRoutes(scanService: QrCodeScanService) {
             }
 
             when (val result = scanService.processScan(request)) {
-                is ScanResult.Success -> {
-                    call.respond(
+                is ScanResult.Success -> call.respond(
                         Accepted,
                         QrCodeScanResponse(
                             message = "QR code scan processed successfully",
@@ -38,7 +37,6 @@ fun Route.qrCodeRoutes(scanService: QrCodeScanService) {
                             scaneePoints = result.scaneePoints
                         )
                     )
-                }
 
                 is ScanResult.UserNotFound -> {
                     call.respond(NotFound, ErrorResponse(result.message))

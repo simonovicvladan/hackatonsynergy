@@ -47,9 +47,7 @@ object UserRepository {
         val scaneeToken = scaneeRow?.get(Users.fcmToken)
         val scaneeExists = scaneeRow != null
 
-        scaneeRow?.let { row ->
-            updateUserPoints(scaneeEmail, row, scaneePoints, qrCode)
-        }
+        scaneeRow?.let { row -> updateUserPoints(scaneeEmail, row, scaneePoints, qrCode) }
 
         val scannerRow = Users.selectAll()
             .where { Users.email eq scannerEmail }
@@ -58,9 +56,7 @@ object UserRepository {
         val scannerToken = scannerRow?.get(Users.fcmToken)
         val scannerExists = scannerRow != null
 
-        scannerRow?.let { row ->
-            updateUserPoints(scannerEmail, row, scannerPoints, qrCode)
-        }
+        scannerRow?.let { row -> updateUserPoints(scannerEmail, row, scannerPoints, qrCode) }
 
         ScanUpdateResult(
             scannerToken = scannerToken,
