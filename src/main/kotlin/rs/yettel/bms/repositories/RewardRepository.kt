@@ -1,8 +1,9 @@
 package rs.yettel.bms.repositories
 
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import rs.yettel.bms.db.Rewards
 import rs.yettel.bms.db.Users
 import rs.yettel.bms.models.Reward
@@ -44,7 +45,7 @@ object RewardRepository {
         if (currentPoints < rewardPoints) return@transaction false to "Insufficient points"
 
         Users.update({ Users.subscriberId eq userId }) {
-            it[Users.currentPointsAmount] = currentPoints - rewardPoints
+            it[currentPointsAmount] = currentPoints - rewardPoints
         }
 
         val newUsedBy = usedByUsers + userId
@@ -53,10 +54,6 @@ object RewardRepository {
         }
 
         return@transaction true to null
-    }
-
-    fun delete(id: Long): Boolean = transaction {
-        Rewards.deleteWhere { Rewards.id eq id } > 0
     }
 
     private fun toReward(row: ResultRow): Reward = Reward(
