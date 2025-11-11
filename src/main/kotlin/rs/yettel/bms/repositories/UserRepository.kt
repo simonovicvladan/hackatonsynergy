@@ -6,6 +6,7 @@ import rs.yettel.bms.db.Users
 import rs.yettel.bms.models.User
 
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 object UserRepository {
 
@@ -17,7 +18,7 @@ object UserRepository {
     fun findByMsisdn(msisdn: Long): User? = transaction {
         Users.selectAll()
             .where { Users.msisdn eq msisdn }
-            .map { toUser(it) }
+            .map(::toUser)
             .singleOrNull()
     }
 
@@ -31,12 +32,6 @@ object UserRepository {
         tariffPackage = row[Users.tariffPackage],
         category = row[Users.category],
         currentPointsAmount = row[Users.currentPointsAmount],
-        scannedPoints = row[Users.scannedPoints]?.let {
-            try {
-                Json.decodeFromString<List<String>>(it)
-            } catch (e: Exception) {
-                emptyList()
-            }
-        }
+        scannedQrCodes = row[Users.scannedQrCodes]
     )
 }

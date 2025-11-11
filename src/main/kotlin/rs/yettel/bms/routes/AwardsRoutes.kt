@@ -9,14 +9,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import rs.yettel.bms.repositories.AwardRepository
+import rs.yettel.bms.repositories.RewardRepository
 
 fun Route.awardRoutes() {
 
     route("/awards") {
 
         get {
-            val awards = AwardRepository.findAll()
+            val awards = RewardRepository.findAll()
             call.respond(awards)
         }
 
@@ -27,7 +27,7 @@ fun Route.awardRoutes() {
                 return@get
             }
 
-            val award = AwardRepository.findById(id)
+            val award = RewardRepository.findById(id)
             if (award == null) {
                 call.respondText("Award not found", status = NotFound)
             } else {
@@ -37,7 +37,7 @@ fun Route.awardRoutes() {
 
         post {
             val request = call.receive<CreateAwardRequest>()
-            val newId = AwardRepository.create(request)
+            val newId = RewardRepository.create(request)
             call.respondText("Award created successfully with ID $newId", status = Created)
         }
 
@@ -49,9 +49,9 @@ fun Route.awardRoutes() {
             }
 
             val request = call.receive<UpdateAwardRequest>()
-            val success = AwardRepository.update(id, request)
+            val success = RewardRepository.update(id, request)
             if (success) {
-                call.respondText("✅ Award updated successfully!")
+                call.respondText("Award updated successfully!")
             } else {
                 call.respondText("Award not found", status = NotFound)
             }
@@ -64,7 +64,7 @@ fun Route.awardRoutes() {
                 return@delete
             }
 
-            val success = AwardRepository.delete(id)
+            val success = RewardRepository.delete(id)
             if (success) {
                 call.respondText("Award deleted successfully!", status = NoContent)
             } else {

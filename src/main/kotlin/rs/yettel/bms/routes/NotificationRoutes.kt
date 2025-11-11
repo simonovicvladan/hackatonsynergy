@@ -99,7 +99,7 @@ data class NotificationContent(
 
 @Serializable
 data class RegisterTokenRequest(
-    val msisdn: Long,
+    val msisdn: Long, // todo email
     val token: String
 )
 

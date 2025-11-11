@@ -13,5 +13,5 @@ data class User(
     val tariffPackage: String?,
     val category: Short?,
     val currentPointsAmount: Int?,
-    val scannedPoints: List<String>?
+    val scannedQrCodes: List<String>?
 )
