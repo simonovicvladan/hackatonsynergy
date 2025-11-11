@@ -37,10 +37,8 @@ object RewardRepository {
         val currentPoints = userRow[Users.currentPointsAmount] ?: 0
         val rewardPoints = rewardRow[Rewards.points]
 
-        val eligibleUsers = rewardRow[Rewards.eligibleUsers]
         val usedByUsers = rewardRow[Rewards.usedByUsers]
 
-        if (userId !in eligibleUsers) return@transaction false to "User not eligible for this reward"
         if (userId in usedByUsers) return@transaction false to "Reward already claimed by this user"
         if (currentPoints < rewardPoints) return@transaction false to "Insufficient points"
 

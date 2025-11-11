@@ -1,9 +1,9 @@
 package rs.yettel.bms.routes
 
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
-import io.ktor.http.HttpStatusCode.Companion.InternalServerError
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.http.HttpStatusCode.Companion.UnprocessableEntity
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -64,7 +64,7 @@ fun Route.userRoutes() {
 
             val (success, error) = RewardRepository.claimReward(userId, rewardId)
             if (!success) {
-                call.respond(BadRequest, ErrorResponse(error ?: "Failed to claim reward"))
+                call.respond(UnprocessableEntity, ErrorResponse(error ?: "Failed to claim reward"))
                 return@post
             }
 
