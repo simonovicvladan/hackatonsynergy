@@ -20,6 +20,8 @@ dependencies {
 
     implementation("io.ktor:ktor-server-call-logging-jvm:2.3.4")
 
+    implementation("io.ktor:ktor-server-cors-jvm:2.3.4")
+
     implementation("com.google.zxing:core:3.5.1")
     implementation("com.google.zxing:javase:3.5.1")
 

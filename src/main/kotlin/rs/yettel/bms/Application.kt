@@ -10,6 +10,8 @@ import io.ktor.server.routing.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.cors.routing.*
+import kotlinx.serialization.json.Json
 import rs.yettel.bms.routes.qrCodeRoutes
 import rs.yettel.bms.db.DatabaseFactory
 import rs.yettel.bms.firebase.FirebaseAdmin
@@ -22,7 +24,25 @@ import rs.yettel.bms.services.QrCodeScanService
 
 fun main() {
     embeddedServer(Netty, port = 8080) {
-        install(ContentNegotiation) { json() }
+        install(CORS) {
+            allowMethod(HttpMethod.Options)
+            allowMethod(HttpMethod.Get)
+            allowMethod(HttpMethod.Post)
+            allowMethod(HttpMethod.Put)
+            allowMethod(HttpMethod.Delete)
+            allowHeader(HttpHeaders.Authorization)
+            allowHeader(HttpHeaders.ContentType)
+            anyHost()
+            allowCredentials = true
+            allowNonSimpleContentTypes = true
+        }
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+                ignoreUnknownKeys = true
+            })
+        }
         install(CallLogging)
 
         install(StatusPages) {
@@ -48,7 +68,7 @@ fun main() {
 
         routing {
             get("/") {
-                call.respondText("Ktor backend is running with FCM!")
+                call.respondText("Ktor backend server is running!")
             }
             userRoutes()
             rewardRoutes()
