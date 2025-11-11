@@ -35,7 +35,7 @@ object UserRepository {
             try {
                 Json.decodeFromString<List<String>>(it)
             } catch (e: Exception) {
-                null
+                emptyList()
             }
         }
     )

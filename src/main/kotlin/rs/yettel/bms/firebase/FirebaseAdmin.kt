@@ -21,6 +21,6 @@ object FirebaseAdmin {
         FirebaseApp.initializeApp(options)
         initialized = true
 
-        println("Firebase initialized successfully.")
+        println("Firebase initialized successfully")
     }
 }
