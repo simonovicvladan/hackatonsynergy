@@ -23,7 +23,7 @@ object UserRepository {
 
     private fun toUser(row: ResultRow): User = User(
         msisdn = row[Users.msisdn],
-        id = row[Users.id],
+        subscriberId = row[Users.subscriberId],
         uuid = row[Users.uuid],
         name = row[Users.name],
         email = row[Users.email],

@@ -4,7 +4,7 @@ import org.jetbrains.exposed.sql.Table
 
 object Users : Table("users") {
     val msisdn = long("msisdn").uniqueIndex()
-    val id = long("id").nullable()
+    val subscriberId = long("subscriber_id").nullable()
     val uuid = long("uuid").nullable()
     val name = text("name")
     val email = text("email").nullable()

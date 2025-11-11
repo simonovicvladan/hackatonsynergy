@@ -1,6 +1,5 @@
 package rs.yettel.bms.routes
 
-import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -8,10 +7,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import rs.yettel.bms.firebase.FirebaseService
 import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import rs.yettel.bms.db.Users
@@ -21,10 +16,16 @@ fun Route.notificationRoutes() {
     post("/send-notification") {
         val request = call.receive<NotificationRequest>()
 
+        val token = request.message.token
+        val title = request.message.notification.title
+        val body = request.message.notification.body
+        val data = request.message.data
+
         val responseId = FirebaseService.sendNotificationToToken(
-            token = request.token,
-            title = request.title,
-            body = request.body
+            token = token,
+            title = title,
+            body = body,
+            data = data
         )
 
         call.respondText("Notification sent successfully! Response ID: $responseId")
@@ -80,7 +81,18 @@ fun Route.notificationRoutes() {
 
 @Serializable
 data class NotificationRequest(
+    val message: Message
+)
+
+@Serializable
+data class Message(
     val token: String,
+    val notification: NotificationContent,
+    val data: Map<String, String>? = null
+)
+
+@Serializable
+data class NotificationContent(
     val title: String,
     val body: String
 )
