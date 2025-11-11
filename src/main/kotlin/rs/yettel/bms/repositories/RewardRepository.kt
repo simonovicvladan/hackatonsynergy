@@ -4,9 +4,8 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import rs.yettel.bms.db.Rewards
+import rs.yettel.bms.db.Users
 import rs.yettel.bms.models.Reward
-import rs.yettel.bms.routes.CreateAwardRequest
-import rs.yettel.bms.routes.UpdateAwardRequest
 
 object RewardRepository {
 
@@ -21,22 +20,39 @@ object RewardRepository {
             .singleOrNull()
     }
 
-    fun create(request: CreateAwardRequest): Long = transaction {
-        Rewards.insert { stmt ->
-            stmt[awardName] = request.awardName
-            stmt[points] = request.points
-            stmt[eligibleUsers] = request.eligibleUsers.toList()
-            stmt[usedByUsers] = request.usedByUsers.toList()
-        } get Rewards.id
+    fun findAvailableForUser(id: Long): List<Reward> = transaction {
+        Rewards.selectAll()
+            .map { toReward(it) }
+            .filter { id in it.eligibleUsers && id !in it.usedByUsers }
     }
 
-    fun update(id: Long, request: UpdateAwardRequest): Boolean = transaction {
-        Rewards.update({ Rewards.id eq id }) { stmt ->
-            request.awardName?.let { v -> stmt[awardName] = v }
-            request.points?.let { v -> stmt[points] = v }
-            request.eligibleUsers?.let { lst -> stmt[eligibleUsers] = lst.toList() }
-            request.usedByUsers?.let { lst -> stmt[usedByUsers] = lst.toList() }
-        } > 0
+    fun claimReward(userId: Long, rewardId: Long): Pair<Boolean, String?> = transaction {
+        val userRow = Users.selectAll().where { Users.subscriberId eq userId }.singleOrNull()
+            ?: return@transaction false to "User not found"
+
+        val rewardRow = Rewards.selectAll().where { Rewards.id eq rewardId }.singleOrNull()
+            ?: return@transaction false to "Reward not found"
+
+        val currentPoints = userRow[Users.currentPointsAmount] ?: 0
+        val rewardPoints = rewardRow[Rewards.points]
+
+        val eligibleUsers = rewardRow[Rewards.eligibleUsers]
+        val usedByUsers = rewardRow[Rewards.usedByUsers]
+
+        if (userId !in eligibleUsers) return@transaction false to "User not eligible for this reward"
+        if (userId in usedByUsers) return@transaction false to "Reward already claimed by this user"
+        if (currentPoints < rewardPoints) return@transaction false to "Insufficient points"
+
+        Users.update({ Users.subscriberId eq userId }) {
+            it[Users.currentPointsAmount] = currentPoints - rewardPoints
+        }
+
+        val newUsedBy = usedByUsers + userId
+        Rewards.update({ Rewards.id eq rewardId }) {
+            it[Rewards.usedByUsers] = newUsedBy
+        }
+
+        return@transaction true to null
     }
 
     fun delete(id: Long): Boolean = transaction {
@@ -45,7 +61,7 @@ object RewardRepository {
 
     private fun toReward(row: ResultRow): Reward = Reward(
         id = row[Rewards.id],
-        rewardName = row[Rewards.awardName],
+        rewardName = row[Rewards.rewardName],
         points = row[Rewards.points],
         eligibleUsers = row[Rewards.eligibleUsers],
         usedByUsers = row[Rewards.usedByUsers]

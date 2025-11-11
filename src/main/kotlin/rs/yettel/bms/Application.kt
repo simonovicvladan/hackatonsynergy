@@ -15,7 +15,7 @@ import rs.yettel.bms.db.DatabaseFactory
 import rs.yettel.bms.firebase.FirebaseAdmin
 import rs.yettel.bms.firebase.FirebaseService
 import rs.yettel.bms.repositories.UserRepository
-import rs.yettel.bms.routes.awardRoutes
+import rs.yettel.bms.routes.rewardRoutes
 import rs.yettel.bms.routes.notificationRoutes
 import rs.yettel.bms.routes.userRoutes
 import rs.yettel.bms.services.QrCodeScanService
@@ -51,7 +51,7 @@ fun main() {
                 call.respondText("Ktor backend is running with FCM!")
             }
             userRoutes()
-            awardRoutes()
+            rewardRoutes()
             qrCodeRoutes(qrCodeScanService)
             notificationRoutes()
         }

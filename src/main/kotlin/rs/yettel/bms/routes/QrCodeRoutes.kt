@@ -1,10 +1,10 @@
 package rs.yettel.bms.routes
 
+import io.ktor.http.HttpStatusCode.Companion.Accepted
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.Conflict
 import io.ktor.http.HttpStatusCode.Companion.InternalServerError
 import io.ktor.http.HttpStatusCode.Companion.NotFound
-import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -31,7 +31,7 @@ fun Route.qrCodeRoutes(scanService: QrCodeScanService) {
             when (val result = scanService.processScan(request)) {
                 is ScanResult.Success -> {
                     call.respond(
-                        OK,
+                        Accepted,
                         QrCodeScanResponse(
                             message = "QR code scan processed successfully",
                             scannerPoints = result.scannerPoints,

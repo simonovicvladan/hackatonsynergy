@@ -12,6 +12,13 @@ object UserRepository {
             .map(::toUser)
     }
 
+    fun findById(id: Long): User? = transaction {
+        Users.selectAll()
+            .where { Users.subscriberId eq id }
+            .map(::toUser)
+            .singleOrNull()
+    }
+
     fun findByEmail(email: String): User? = transaction {
         Users.selectAll()
             .where { Users.email eq email }

@@ -11,9 +11,9 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import rs.yettel.bms.repositories.RewardRepository
 
-fun Route.awardRoutes() {
+fun Route.rewardRoutes() {
 
-    route("/awards") {
+    route("/rewards") {
 
         get {
             val awards = RewardRepository.findAll()
@@ -35,28 +35,6 @@ fun Route.awardRoutes() {
             }
         }
 
-        post {
-            val request = call.receive<CreateAwardRequest>()
-            val newId = RewardRepository.create(request)
-            call.respondText("Award created successfully with ID $newId", status = Created)
-        }
-
-        put("{id}") {
-            val id = call.parameters["id"]?.toLongOrNull()
-            if (id == null) {
-                call.respondText("Invalid or missing award ID", status = BadRequest)
-                return@put
-            }
-
-            val request = call.receive<UpdateAwardRequest>()
-            val success = RewardRepository.update(id, request)
-            if (success) {
-                call.respondText("Award updated successfully!")
-            } else {
-                call.respondText("Award not found", status = NotFound)
-            }
-        }
-
         delete("{id}") {
             val id = call.parameters["id"]?.toLongOrNull()
             if (id == null) {
@@ -75,16 +53,16 @@ fun Route.awardRoutes() {
 }
 
 @Serializable
-data class CreateAwardRequest(
-    val awardName: String,
+data class CreateRewardRequest(
+    val rewardName: String,
     val points: Int,
     val eligibleUsers: List<Int> = emptyList(),
     val usedByUsers: List<Int> = emptyList()
 )
 
 @Serializable
-data class UpdateAwardRequest(
-    val awardName: String? = null,
+data class UpdateRewardRequest(
+    val rewardName: String? = null,
     val points: Int? = null,
     val eligibleUsers: List<Int>? = null,
     val usedByUsers: List<Int>? = null
