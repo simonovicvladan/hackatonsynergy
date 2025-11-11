@@ -7,10 +7,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 object DatabaseFactory {
     fun init() {
         Database.connect(
-            url = System.getenv("DB_URL") ?: "jdbc:postgresql://localhost:5432/yettel_bms",
-            driver = System.getenv("DB_DRIVER") ?: "org.postgresql.Driver",
-            user = System.getenv("DB_USER") ?: "postgres",
-            password = System.getenv("DB_PASSWORD") ?: "postgres"
+            url = "jdbc:postgresql://localhost:5432/yettel_bms",
+            driver = "org.postgresql.Driver",
+            user = "postgres",
+            password = "postgres"
         )
 
         transaction {

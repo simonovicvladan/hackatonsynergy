@@ -16,13 +16,13 @@ fun Route.userRoutes() {
     route("/users") {
 
         get {
-            val users = UserRepository.getAllUsers()
+            val users = UserRepository.findAll()
             call.respond(users)
         }
 
         post("/login") {
             val request = call.receive<LoginRequest>()
-            val user = UserRepository.getUserByMsisdn(request.msisdn)
+            val user = UserRepository.findByMsisdn(request.msisdn)
 
             if (user != null) {
                 call.respond(user)

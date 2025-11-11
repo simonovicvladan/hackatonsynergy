@@ -30,24 +30,6 @@ services:
     networks:
       - yettel_network
 
-  ktor-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: yettel_backend
-    restart: always
-    depends_on:
-      - postgres
-    environment:
-      DB_URL: jdbc:postgresql://postgres:5432/yettel_bms
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_DRIVER: org.postgresql.Driver
-    ports:
-      - "8080:8080"
-    networks:
-      - yettel_network
-
 volumes:
   postgres_data:
 
