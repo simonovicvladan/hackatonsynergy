@@ -21,20 +21,20 @@ object RewardRepository {
             .singleOrNull()
     }
 
-    fun findAvailableForUser(id: Long?): List<Reward> = transaction {
+    fun findAvailableForUser(msisdn: Long): List<Reward> = transaction {
         Rewards.selectAll()
             .map(::toReward)
-            .filter { id !in it.usedByUsers }
+            .filter { msisdn !in it.usedByUsers }
     }
 
-    fun findClaimedForUser(id: Long): List<Reward> = transaction {
+    fun findClaimedForUser(msisdn: Long): List<Reward> = transaction {
         Rewards.selectAll()
             .map(::toReward)
-            .filter { id in it.usedByUsers }
+            .filter { msisdn in it.usedByUsers }
     }
 
-    fun claimReward(userId: Long, rewardId: Long): Pair<Boolean, String?> = transaction {
-        val userRow = Users.selectAll().where { Users.subscriberId eq userId }.singleOrNull()
+    fun claimReward(msisdn: Long, rewardId: Long): Pair<Boolean, String?> = transaction {
+        val userRow = Users.selectAll().where { Users.msisdn eq msisdn }.singleOrNull()
             ?: return@transaction false to "User not found"
 
         val rewardRow = Rewards.selectAll().where { Rewards.id eq rewardId }.singleOrNull()
@@ -45,14 +45,14 @@ object RewardRepository {
 
         val usedByUsers = rewardRow[Rewards.usedByUsers]
 
-        if (userId in usedByUsers) return@transaction false to "Reward already claimed by this user"
-        if (currentPoints < rewardPoints) return@transaction false to "Insufficient points"
+        if (msisdn in usedByUsers) return@transaction false to "Reward already claimed by user $msisdn"
+        if (currentPoints < rewardPoints) return@transaction false to "Insufficient points: Required $rewardPoints, but gained $currentPoints"
 
-        Users.update({ Users.subscriberId eq userId }) {
+        Users.update({ Users.msisdn eq msisdn }) {
             it[currentPointsAmount] = currentPoints - rewardPoints
         }
 
-        val newUsedBy = usedByUsers + userId
+        val newUsedBy = usedByUsers + msisdn
         Rewards.update({ Rewards.id eq rewardId }) {
             it[Rewards.usedByUsers] = newUsedBy
         }

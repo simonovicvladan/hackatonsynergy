@@ -1,5 +1,6 @@
 package rs.yettel.bms.routes
 
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.HttpStatusCode.Companion.UnprocessableEntity
@@ -49,7 +50,7 @@ fun Route.userRoutes() {
                 call.respond(NotFound, ErrorResponse("User $email not found"))
                 return@get
             }
-            val awards = RewardRepository.findAvailableForUser(user.subscriberId)
+            val awards = RewardRepository.findAvailableForUser(user.msisdn)
             call.respond(awards)
         }
 
@@ -60,26 +61,29 @@ fun Route.userRoutes() {
                 call.respond(NotFound, ErrorResponse("User $email not found"))
                 return@get
             }
-            val claimedRewards = RewardRepository.findClaimedForUser(user.subscriberId!!)
+            val claimedRewards = RewardRepository.findClaimedForUser(user.msisdn)
             call.respond(claimedRewards)
         }
 
         post("{email}/claim-reward/{rewardId}") {
-            val email = call.parameters["email"] ?: ""
+            val email = call.parameters["email"]!!
             val user = UserRepository.findByEmail(email)
             if (user == null) {
                 call.respond(NotFound, ErrorResponse("User $email not found"))
                 return@post
             }
             val rewardId = call.parameters["rewardId"]?.toLongOrNull()
-
-            val (success, error) = RewardRepository.claimReward(user.subscriberId!!, rewardId!!)
+            if (rewardId == null) {
+                call.respond(BadRequest, ErrorResponse("rewardId must not be null"))
+                return@post
+            }
+            val (success, error) = RewardRepository.claimReward(user.msisdn, rewardId)
             if (!success) {
                 call.respond(UnprocessableEntity, ErrorResponse(error ?: "Failed to claim reward"))
                 return@post
             }
 
-            val remainingPoints = UserRepository.findById(user.subscriberId)?.currentPointsAmount ?: 0
+            val remainingPoints = UserRepository.findByEmail(email)?.currentPointsAmount ?: 0
 
             call.respond(
                 OK, ClaimRewardResponse(
