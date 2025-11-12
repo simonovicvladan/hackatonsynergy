@@ -5,8 +5,8 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import rs.yettel.bms.firebase.FirebaseService
 import kotlinx.serialization.Serializable
+import rs.yettel.bms.firebase.FirebaseService
 import rs.yettel.bms.repositories.UserRepository
 
 fun Route.notificationRoutes() {
@@ -17,7 +17,7 @@ fun Route.notificationRoutes() {
         if (updatedRows) {
             call.respondText("FCM token registered successfully for user ${request.email}")
         } else {
-            call.respondText("User ${request.email} not found", status = NotFound)
+            call.respond(NotFound, "User ${request.email} not found")
         }
     }
 

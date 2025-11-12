@@ -23,10 +23,10 @@ fun Route.userRoutes() {
         }
 
         get("{email}") {
-            val email = call.parameters["email"] ?: ""
+            val email = call.parameters["email"]!!
             val user = UserRepository.findByEmail(email)
             if (user == null) {
-                call.respondText("User not found", status = NotFound)
+                call.respond(NotFound, ErrorResponse("User not found"))
                 return@get
             }
             call.respond(user)
@@ -36,28 +36,39 @@ fun Route.userRoutes() {
             val request = call.receive<LoginRequest>()
             val user = UserRepository.findByEmail(request.email)
             if (user == null) {
-                call.respondText("User not found", status = NotFound)
+                call.respond(NotFound, ErrorResponse("User ${request.email} not found"))
                 return@post
             }
             call.respond(user)
         }
 
         get("{email}/rewards") {
-            val email = call.parameters["email"] ?: ""
+            val email = call.parameters["email"]!!
             val user = UserRepository.findByEmail(email)
             if (user == null) {
-                call.respondText("User not found", status = NotFound)
+                call.respond(NotFound, ErrorResponse("User $email not found"))
                 return@get
             }
             val awards = RewardRepository.findAvailableForUser(user.subscriberId)
             call.respond(awards)
         }
 
+        get("{email}/claimed-rewards") {
+            val email = call.parameters["email"]!!
+            val user = UserRepository.findByEmail(email)
+            if (user == null) {
+                call.respond(NotFound, ErrorResponse("User $email not found"))
+                return@get
+            }
+            val claimedRewards = RewardRepository.findClaimedForUser(user.subscriberId!!)
+            call.respond(claimedRewards)
+        }
+
         post("{email}/claim-reward/{rewardId}") {
             val email = call.parameters["email"] ?: ""
             val user = UserRepository.findByEmail(email)
             if (user == null) {
-                call.respondText("User not found", status = NotFound)
+                call.respond(NotFound, ErrorResponse("User $email not found"))
                 return@post
             }
             val rewardId = call.parameters["rewardId"]?.toLongOrNull()
@@ -79,7 +90,7 @@ fun Route.userRoutes() {
         }
 
         get("{email}/offers") {
-            val email = call.parameters["email"] ?: ""
+            val email = call.parameters["email"]!!
             val offer = UserOfferRepository.findUnclaimedOffers(email)
             call.respond(offer)
         }

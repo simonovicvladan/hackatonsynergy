@@ -19,13 +19,12 @@ fun Route.rewardRoutes() {
         get("{id}") {
             val id = call.parameters["id"]?.toLongOrNull()
             if (id == null) {
-                call.respondText("Invalid or missing award ID", status = BadRequest)
+                call.respond(BadRequest, "Award ID must not be null")
                 return@get
             }
-
             val award = RewardRepository.findById(id)
             if (award == null) {
-                call.respondText("Award not found", status = NotFound)
+                call.respond(NotFound, "Award $id not found")
             } else {
                 call.respond(award)
             }

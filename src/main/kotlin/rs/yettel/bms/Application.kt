@@ -1,31 +1,31 @@
 package rs.yettel.bms
 
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.application.*
-import io.ktor.server.response.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.routing.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.callloging.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
-import rs.yettel.bms.routes.qrCodeRoutes
 import rs.yettel.bms.db.DatabaseFactory
 import rs.yettel.bms.firebase.FirebaseAdmin
 import rs.yettel.bms.firebase.FirebaseService
 import rs.yettel.bms.repositories.UserRepository
-import rs.yettel.bms.routes.rewardRoutes
 import rs.yettel.bms.routes.notificationRoutes
+import rs.yettel.bms.routes.qrCodeRoutes
+import rs.yettel.bms.routes.rewardRoutes
 import rs.yettel.bms.routes.userRoutes
 import rs.yettel.bms.services.QrCodeScanService
 
 fun main() {
-    embeddedServer(Netty, port = 8080) {
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         install(CORS) {
             allowMethod(HttpMethod.Options)
             allowMethod(HttpMethod.Get)

@@ -27,6 +27,12 @@ object RewardRepository {
             .filter { id !in it.usedByUsers }
     }
 
+    fun findClaimedForUser(id: Long): List<Reward> = transaction {
+        Rewards.selectAll()
+            .map(::toReward)
+            .filter { id in it.usedByUsers }
+    }
+
     fun claimReward(userId: Long, rewardId: Long): Pair<Boolean, String?> = transaction {
         val userRow = Users.selectAll().where { Users.subscriberId eq userId }.singleOrNull()
             ?: return@transaction false to "User not found"
