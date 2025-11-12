@@ -21,7 +21,7 @@ object RewardRepository {
             .singleOrNull()
     }
 
-    fun findAvailableForUser(id: Long): List<Reward> = transaction {
+    fun findAvailableForUser(id: Long?): List<Reward> = transaction {
         Rewards.selectAll()
             .map(::toReward)
             .filter { id !in it.usedByUsers }

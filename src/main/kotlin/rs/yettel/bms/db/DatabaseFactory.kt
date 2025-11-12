@@ -10,10 +10,10 @@ private val logger = LoggerFactory.getLogger("DatabaseFactory")
 object DatabaseFactory {
     fun init() {
         Database.connect(
-            url = "jdbc:postgresql://localhost:5432/yettel_bms",
+            url = "jdbc:postgresql://localhost:5432/yettel_hakaton",
             driver = "org.postgresql.Driver",
             user = "postgres",
-            password = "postgres"
+            password = "janko1712"
         )
 
         transaction {

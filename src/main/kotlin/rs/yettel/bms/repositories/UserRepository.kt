@@ -14,7 +14,7 @@ object UserRepository {
             .map(::toUser)
     }
 
-    fun findById(id: Long): User? = transaction {
+    fun findById(id: Long?): User? = transaction {
         Users.selectAll()
             .where { Users.subscriberId eq id }
             .map(::toUser)
