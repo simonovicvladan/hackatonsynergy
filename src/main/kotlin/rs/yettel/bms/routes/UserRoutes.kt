@@ -95,6 +95,11 @@ fun Route.userRoutes() {
 
         get("{email}/offers") {
             val email = call.parameters["email"]!!
+            val user = UserRepository.findByEmail(email)
+            if (user == null) {
+                call.respond(NotFound, ErrorResponse("User $email not found"))
+                return@get
+            }
             val offer = UserOfferRepository.findUnclaimedOffers(email)
             call.respond(offer)
         }

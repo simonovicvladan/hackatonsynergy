@@ -20,7 +20,11 @@ object UserOfferRepository {
     fun findUnclaimedOffers(email: String): List<UserOffer> = transaction {
         UserOffers
             .selectAll()
-            .where { (UserOffers.email eq email) and (UserOffers.claimed eq 0) }
+            .where {
+                (UserOffers.email eq email) and
+                        (UserOffers.claimed eq 0) and
+                        UserOffers.scannerEmail.isNotNull()
+            }
             .map(::toUserOffer)
     }
 
