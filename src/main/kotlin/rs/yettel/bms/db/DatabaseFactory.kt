@@ -17,7 +17,7 @@ object DatabaseFactory {
         )
 
         transaction {
-            SchemaUtils.create(Users, Rewards, UserOffers, Recommendations)
+            SchemaUtils.create(Users, Rewards, UserOffers)
             logger.info("PostgreSQL database initialized successfully")
         }
     }

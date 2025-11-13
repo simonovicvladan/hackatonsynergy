@@ -8,10 +8,9 @@ data class UserOffer(
     val email: String,
     val offerId: Long,
     val offerName: String,
-    val offerDescription: String,
     val points: Int,
     val price: Int,
     val discount: Int,
     val claimed: Int,
-    val scannerEmail: String
+    val scannerEmail: String?
 )

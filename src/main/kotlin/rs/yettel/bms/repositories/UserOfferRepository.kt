@@ -48,15 +48,14 @@ object UserOfferRepository {
             .singleOrNull()
     }
 
-    private fun toUserOffer(it: ResultRow) = UserOffer(
+    private fun toUserOffer(it: ResultRow): UserOffer = UserOffer(
         msisdn = it[UserOffers.msisdn],
         email = it[UserOffers.email],
         offerId = it[UserOffers.offerId],
         offerName = it[UserOffers.offerName],
-        offerDescription = it[UserOffers.description],
         points = it[UserOffers.points],
         price = it[UserOffers.price],
-        discount = it[UserOffers.discount],
+        discount = it[UserOffers.discountPrice],
         claimed = it[UserOffers.claimed],
         scannerEmail = it[UserOffers.scannerEmail]
     )
