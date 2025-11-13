@@ -8,8 +8,9 @@ object UserOffers : Table("user_offers") {
     val offerId = long("offer_id")
     val offerName = text("offer_name")
     val description = text("description").default("")
-    val points = long("points")
+    val points = integer("points")
     val price = integer("price")
     val discount = integer("discount")
     val claimed = integer("claimed").default(0)
+    val scannerEmail = text("scanner_email")
 }

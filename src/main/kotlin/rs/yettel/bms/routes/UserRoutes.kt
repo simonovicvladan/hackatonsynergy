@@ -43,8 +43,6 @@ fun Route.userRoutes() {
             call.respond(user)
         }
 
-        // TODO available/unclaimed rewards
-
         get("{email}/rewards") {
             val email = call.parameters["email"]!!
             val user = UserRepository.findByEmail(email)
@@ -100,6 +98,29 @@ fun Route.userRoutes() {
             val offer = UserOfferRepository.findUnclaimedOffers(email)
             call.respond(offer)
         }
+
+        post("{email}/claim-offer/{offerId}") {
+            val scaneeEmail = call.parameters["email"]!!
+            val offerId = call.parameters["offerId"]!!.toLongOrNull()
+            val scannerEmail = UserOfferRepository.findScannerEmailByOfferId(offerId!!)
+
+            if (scannerEmail == null) {
+                call.respond(NotFound, ErrorResponse("For scanee $scaneeEmail, Scanner Email not found"))
+                return@post
+            }
+
+            val offer = UserOfferRepository.findById(offerId)
+            if (offer == null) {
+                call.respond(NotFound, ErrorResponse("Offer $offerId not found"))
+                return@post
+            }
+            UserRepository.updateUserOfferPoints(scaneeEmail, offer.points)
+            UserRepository.updateUserOfferPoints(scannerEmail, offer.points)
+
+            UserOfferRepository.updateUserOfferClaim(scaneeEmail)
+
+            call.respond(OK, ClaimOfferResponse(message = "Offer claimed successfully"))
+        }
     }
 }
 
@@ -108,3 +129,7 @@ data class LoginRequest(val email: String, val password: String)
 
 @Serializable
 data class ClaimRewardResponse(val message: String, val remainingPoints: Int)
+
+
+@Serializable
+data class ClaimOfferResponse(val message: String)

@@ -46,8 +46,13 @@ object UserRepository {
         val scannerToken = scannerRow?.get(Users.fcmToken)
         val scannerExists = scannerRow != null
 
-        scaneeRow?.let { row -> updateUserPointsAndScannedQrCodes(scannerEmail, row, scaneePoints) }
-        scannerRow?.let { row -> updateUserPointsAndScannedQrCodes(scaneeEmail, row, scannerPoints) }
+        scaneeRow?.let { row ->
+            updateUserPoints(row, scaneePoints)
+        }
+        scannerRow?.let { row ->
+            updateUserPoints(row, scannerPoints)
+            updateScannerScannedQrCodes(scaneeEmail, row)
+        }
 
         ScanUpdateResult(
             scannerToken = scannerToken,
@@ -57,26 +62,42 @@ object UserRepository {
         )
     }
 
-    private fun updateUserPointsAndScannedQrCodes(qrCodeEmail: String, row: ResultRow, points: Int) {
+    private fun updateUserPoints(row: ResultRow, points: Int) {
         val currentPoints = row[Users.currentPointsAmount] ?: 0
+        Users.update({ Users.email eq row[Users.email] }) {
+            it[currentPointsAmount] = currentPoints + points
+        }
+    }
+
+    private fun updateScannerScannedQrCodes(scannerEmail: String, row: ResultRow) {
         val existingQrCodes = row[Users.scannedQrCodes] ?: emptyList()
-        val newQrCodes = if (!existingQrCodes.contains(qrCodeEmail)) {
-            existingQrCodes + qrCodeEmail
+        val newQrCodes = if (!existingQrCodes.contains(scannerEmail)) {
+            existingQrCodes + scannerEmail
         } else {
             existingQrCodes
         }
         Users.update({ Users.email eq row[Users.email] }) {
-            it[currentPointsAmount] = currentPoints + points
             it[scannedQrCodes] = newQrCodes
         }
     }
 
     fun hasScannedQrCode(scannerEmail: String, scaneeEmail: String): Boolean = transaction {
         Users.selectAll()
-            .where { Users.email eq scaneeEmail }
+            .where { Users.email eq scannerEmail }
             .singleOrNull()
             ?.get(Users.scannedQrCodes)
-            ?.contains(scannerEmail) ?: false
+            ?.contains(scaneeEmail) ?: false
+    }
+
+    fun updateUserOfferPoints(email: String, points: Int) = transaction {
+        val scannerRow = Users
+            .selectAll()
+            .where { Users.email eq email }
+            .singleOrNull()
+
+        scannerRow?.let { row ->
+            updateUserPoints(row, points)
+        }
     }
 
     private fun toUser(row: ResultRow): User = User(

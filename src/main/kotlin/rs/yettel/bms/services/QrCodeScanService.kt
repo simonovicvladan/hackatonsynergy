@@ -7,15 +7,17 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import rs.yettel.bms.firebase.FirebaseService
 import rs.yettel.bms.repositories.ScanUpdateResult
+import rs.yettel.bms.repositories.UserOfferRepository
 import rs.yettel.bms.repositories.UserRepository
 import rs.yettel.bms.routes.QrCodeScanRequest
 import rs.yettel.bms.routes.ScanResult
 
 class QrCodeScanService(
     private val userRepository: UserRepository,
+    private val userOfferRepository: UserOfferRepository,
     private val firebaseService: FirebaseService,
-    private val scannerPoints: Int = 2000,
-    private val scaneePoints: Int = 1000
+    private val scannerPoints: Int = 300,
+    private val scaneePoints: Int = 100
 ) {
     private val logger = LoggerFactory.getLogger(QrCodeScanService::class.java)
     private val notificationScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -32,7 +34,7 @@ class QrCodeScanService(
                 scannerPoints = scannerPoints,
                 scaneePoints = scaneePoints
             )
-
+            userOfferRepository.updateUserScannerEmail(request.scaneeEmail, request.scannerEmail)
             when {
                 !result.scannerExists -> {
                     ScanResult.UserNotFound("Scanner user not found: ${request.scannerEmail}")

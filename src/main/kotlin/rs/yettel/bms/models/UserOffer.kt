@@ -9,8 +9,9 @@ data class UserOffer(
     val offerId: Long,
     val offerName: String,
     val offerDescription: String,
-    val points: Long,
+    val points: Int,
     val price: Int,
     val discount: Int,
-    val claimed: Int
+    val claimed: Int,
+    val scannerEmail: String
 )

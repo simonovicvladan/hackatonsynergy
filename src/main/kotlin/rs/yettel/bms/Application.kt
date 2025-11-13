@@ -17,6 +17,7 @@ import org.slf4j.event.Level
 import rs.yettel.bms.db.DatabaseFactory
 import rs.yettel.bms.firebase.FirebaseAdmin
 import rs.yettel.bms.firebase.FirebaseService
+import rs.yettel.bms.repositories.UserOfferRepository
 import rs.yettel.bms.repositories.UserRepository
 import rs.yettel.bms.routes.notificationRoutes
 import rs.yettel.bms.routes.qrCodeRoutes
@@ -66,9 +67,10 @@ fun main() {
         val firebaseService = FirebaseService
         val qrCodeScanService = QrCodeScanService(
             userRepository = UserRepository,
+            userOfferRepository = UserOfferRepository,
             firebaseService = firebaseService,
-            scannerPoints = 2000,
-            scaneePoints = 1000
+            scannerPoints = 300,
+            scaneePoints = 100
         )
 
         routing {
