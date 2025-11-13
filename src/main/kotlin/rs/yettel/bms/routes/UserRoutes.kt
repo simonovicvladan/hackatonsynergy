@@ -43,6 +43,8 @@ fun Route.userRoutes() {
             call.respond(user)
         }
 
+        // TODO available/unclaimed rewards
+
         get("{email}/rewards") {
             val email = call.parameters["email"]!!
             val user = UserRepository.findByEmail(email)

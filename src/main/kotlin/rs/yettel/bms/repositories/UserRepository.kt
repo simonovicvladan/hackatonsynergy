@@ -30,8 +30,8 @@ object UserRepository {
     fun addPointsToUsersAndGetFcmTokensForNotifications(
         scannerEmail: String,
         scaneeEmail: String,
-        scannerPoints: Int = 2000,
-        scaneePoints: Int = 1000,
+        scannerPoints: Int = 300,
+        scaneePoints: Int = 100,
     ): ScanUpdateResult = transaction {
 
         val scaneeRow = Users.selectAll()
