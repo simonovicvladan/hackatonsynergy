@@ -30,7 +30,7 @@ object FirebaseService {
             val message = messageBuilder.build()
             val messageId = FirebaseMessaging.getInstance().send(message)
 
-            logger.info("Notification sent successfully. Message ID: $messageId")
+            logger.info("Notification for device token $token sent successfully. Message ID: $messageId")
             Result.success(messageId)
 
         } catch (e: FirebaseMessagingException) {
