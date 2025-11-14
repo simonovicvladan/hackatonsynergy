@@ -29,22 +29,24 @@ object UserOfferRepository {
     }
 
     fun updateUserScannerEmail(userEmail: String, userScannerEmail: String) = transaction {
-        UserOffers.update({ UserOffers.email eq userEmail }) { stmt ->
-            userScannerEmail.let { v -> stmt[scannerEmail] = v }
+        UserOffers.update({ UserOffers.email eq userScannerEmail }) { stmt ->
+            userEmail.let { v -> stmt[scannerEmail] = v }
         } > 0
     }
 
-    fun updateUserOfferClaim(userEmail: String) = transaction {
-        UserOffers.update({ UserOffers.email eq userEmail }) { stmt ->
+    fun updateUserOfferClaim(userEmail: String, offerId: Long) = transaction {
+        UserOffers.update({
+            (UserOffers.email eq userEmail) and (UserOffers.offerId eq offerId)
+        }) { stmt ->
             userEmail.let { stmt[claimed] = 1 }
         } > 0
     }
 
-    fun findScannerEmailByOfferId(offerId: Long): String? = transaction {
+    fun findScaneeEmailByScannerEmailAndOfferId(userScannerEmail: String, offerId: Long): UserOffer? = transaction {
         UserOffers
             .selectAll()
-            .where { (UserOffers.offerId eq offerId) and (UserOffers.claimed eq 0) }
-            .map { it[UserOffers.scannerEmail] }
+            .where { (UserOffers.offerId eq offerId) and (UserOffers.claimed eq 0) and (UserOffers.email eq userScannerEmail) }
+            .map { toUserOffer(it) }
             .singleOrNull()
     }
 

@@ -10,6 +10,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import rs.yettel.bms.dto.ErrorResponse
+import rs.yettel.bms.firebase.FirebaseService
 import rs.yettel.bms.repositories.RewardRepository
 import rs.yettel.bms.repositories.UserOfferRepository
 import rs.yettel.bms.repositories.UserRepository
@@ -104,25 +105,44 @@ fun Route.userRoutes() {
             call.respond(offer)
         }
 
+        // TODO rename database column scanner_email to scanee_email
+
         post("{email}/claim-offer/{offerId}") {
-            val scaneeEmail = call.parameters["email"]!!
+            val scannerEmail = call.parameters["email"]!!
             val offerId = call.parameters["offerId"]!!.toLongOrNull()
-            val scannerEmail = UserOfferRepository.findScannerEmailByOfferId(offerId!!)
+            val scannerOffer = UserOfferRepository.findScaneeEmailByScannerEmailAndOfferId(scannerEmail, offerId!!)
 
-            if (scannerEmail == null) {
-                call.respond(NotFound, ErrorResponse("For scanee $scaneeEmail, Scanner Email not found"))
+            if (scannerOffer == null) {
+                call.respond(NotFound, ErrorResponse("For scanner $scannerEmail, scanee email or offer not found"))
+                return@post
+            }
+            UserRepository.updateUserOfferPoints(scannerOffer.email, scannerOffer.points)
+            UserRepository.updateUserOfferPoints(scannerOffer.scannerEmail!!, scannerOffer.points)
+
+            UserOfferRepository.updateUserOfferClaim(scannerOffer.email, offerId)
+
+            val scanner = UserRepository.findByEmail(scannerEmail)
+            val scanee = UserRepository.findByEmail(scannerOffer.scannerEmail)
+            if (scanee == null || scanner == null) {
+                call.respond(NotFound, ErrorResponse("User ${scannerOffer.email}/${scannerEmail} not found"))
                 return@post
             }
 
-            val offer = UserOfferRepository.findById(offerId)
-            if (offer == null) {
-                call.respond(NotFound, ErrorResponse("Offer $offerId not found"))
-                return@post
-            }
-            UserRepository.updateUserOfferPoints(scaneeEmail, offer.points)
-            UserRepository.updateUserOfferPoints(scannerEmail, offer.points)
-
-            UserOfferRepository.updateUserOfferClaim(scaneeEmail)
+            val tokens = listOfNotNull(
+                scanee.fcmToken,
+                scanner.fcmToken
+            )
+            FirebaseService.sendNotificationToMultipleTokens(
+                tokens = tokens,
+                title = "You earned ${scannerOffer.points} for accepting offer",
+                body = "Offer ${scannerOffer.offerName} successfully claimed! Check points balance",
+                data = mapOf(
+                    "type" to "scanee",
+                    "scanner" to scanner.name,
+                    "scanee" to scanee.name,
+                    "points" to scannerOffer.points.toString()
+                )
+            )
 
             call.respond(OK, ClaimOfferResponse(message = "Offer claimed successfully"))
         }
